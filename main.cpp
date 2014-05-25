@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include <unistd.h>
+#include <time.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
@@ -151,7 +152,7 @@ int load_image(std::string filename) {
 
 #define SIZE 110.0
 
-void render(GLuint texid) {
+void render(GLuint texid, GLuint texid2, GLuint texid3) {
     // Clear with black
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -161,20 +162,39 @@ void render(GLuint texid) {
     glOrtho(-512, 512, 384, -384, -1000, 1000);
 
     // Render the slippy map parts
-    glPushMatrix();
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, texid);
+    glEnable(GL_TEXTURE_2D);
         glRotated(_angle2, 1.0, 0.0, 0.0);
         glRotated(_angle1, 0.0, 0.0, -1.0);
-        glBegin(GL_QUADS);
-            glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
-            glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
-            glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
-            glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
-        glEnd();
-        glDisable(GL_TEXTURE_2D);
-    glPopMatrix();
-
+        glPushMatrix();
+            glBindTexture(GL_TEXTURE_2D, texid);
+            glBegin(GL_QUADS);
+                glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
+                glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
+                glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
+                glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
+            glEnd();
+        glPopMatrix();
+        glPushMatrix();
+            glBindTexture(GL_TEXTURE_2D, texid2);
+            glTranslated(0, SIZE*2, 0);
+            glBegin(GL_QUADS);
+                glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
+                glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
+                glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
+                glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
+            glEnd();
+            glBindTexture(GL_TEXTURE_2D, texid3);
+            glPopMatrix();
+            glPushMatrix();
+            glTranslated(-SIZE*2, SIZE*2, 0);
+            glBegin(GL_QUADS);
+                glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
+                glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
+                glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
+                glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
+            glEnd();
+        glPopMatrix();
+    glDisable(GL_TEXTURE_2D);
 }
 
 int main(int argc, char **argv) {
@@ -192,20 +212,38 @@ int main(int argc, char **argv) {
     // Load the file matching the given coordinates
     std::string filename = get_filename(16, lat2tiley(50.356718, 16), long2tilex(7.599485, 16));
     int texid = load_image(filename);
-    if (texid < 0) {
-        goto out;
-    }
 
-    while(true) {
-        if (!poll()) {
-            break;
+    std::string filename2 = "../16/34151/22125.png";
+    int texid2 = load_image(filename2);
+    std::string filename3 = "../16/34150/22125.png";
+    int texid3 = load_image(filename3);
+
+    if (texid >= 0 && texid2 >= 0 && texid3 >= 0) {
+
+        struct timespec spec;
+        clock_gettime(CLOCK_REALTIME, &spec);
+        long base_time = spec.tv_sec * 1000 + round(spec.tv_nsec / 1.0e6);
+        int frames = 0;
+        while(true) {
+            if (!poll()) {
+                break;
+            }
+            frames++;
+
+            clock_gettime(CLOCK_REALTIME, &spec);
+            long time_in_mill = spec.tv_sec * 1000 + round(spec.tv_nsec / 1.0e6);
+            if ((time_in_mill - base_time) > 1000.0) {
+                std::cout << frames * 1000.0 / (time_in_mill - base_time) << " fps" << std::endl;
+                base_time = time_in_mill;
+                frames=0;
+            }
+
+
+            render(texid, texid2, texid3);
+            SDL_GL_SwapWindow(window);
         }
 
-        render(texid);
-        SDL_GL_SwapWindow(window);
     }
-
-out:
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();
