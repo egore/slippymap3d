@@ -22,6 +22,17 @@ std::string get_filename(int zoom, double latitude, double longitude) {
     return filename.str();
 }
 
+bool left_mouse_down = false;
+
+double angle(int p1x, int p1y, int p2x, int p2y) {
+    float xDiff = p2x - p1x;
+    float yDiff = p2y - p1y;
+    return -atan2(yDiff, xDiff) * (180 / M_PI);
+}
+
+double _angle = 0.0;
+double start_angle = 0.0;
+
 /**
  * @brief poll for events
  * @return true, if the program should end
@@ -35,6 +46,22 @@ bool poll() {
             case SDL_KEYUP:
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
                     return false;
+                }
+                break;
+            case SDL_MOUSEMOTION:
+                if (left_mouse_down) {
+                    _angle = angle(event.motion.x, event.motion.y, 512, 384) - start_angle;
+                }
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                if (event.button.button == 1) {
+                    left_mouse_down = true;
+                    start_angle = angle(event.button.x, event.button.y, 512, 384) - _angle;
+                }
+                break;
+            case SDL_MOUSEBUTTONUP:
+                if (event.button.button == 1) {
+                    left_mouse_down = false;
                 }
                 break;
             default:
@@ -122,6 +149,7 @@ void render(GLuint texid) {
     // Render the slippy map parts
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texid);
+    glRotated(_angle, 0.0, 0.0, -1.0);
     glBegin(GL_QUADS);
         glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
         glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
