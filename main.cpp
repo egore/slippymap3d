@@ -162,18 +162,19 @@ void render(GLuint texid) {
 
     // Render the slippy map parts
     glPushMatrix();
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texid);
-    glRotated(_angle2, 1.0, 0.0, 0.0);
-    glRotated(_angle1, 0.0, 0.0, -1.0);
-    glBegin(GL_QUADS);
-        glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
-        glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
-        glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
-        glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
-    glEnd();
-    glDisable(GL_TEXTURE_2D);
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, texid);
+        glRotated(_angle2, 1.0, 0.0, 0.0);
+        glRotated(_angle1, 0.0, 0.0, -1.0);
+        glBegin(GL_QUADS);
+            glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
+            glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
+            glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
+            glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
+        glEnd();
+        glDisable(GL_TEXTURE_2D);
     glPopMatrix();
+
 }
 
 int main(int argc, char **argv) {
