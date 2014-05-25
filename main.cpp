@@ -23,6 +23,7 @@ std::string get_filename(int zoom, double latitude, double longitude) {
 }
 
 bool left_mouse_down = false;
+bool right_mouse_down = false;
 
 double angle(int p1x, int p1y, int p2x, int p2y) {
     float xDiff = p2x - p1x;
@@ -30,8 +31,10 @@ double angle(int p1x, int p1y, int p2x, int p2y) {
     return -atan2(yDiff, xDiff) * (180 / M_PI);
 }
 
-double _angle = 0.0;
-double start_angle = 0.0;
+double _angle1 = 0.0;
+double start_angle1 = 0.0;
+double _angle2 = 0.0;
+double start_angle2 = 0.0;
 
 /**
  * @brief poll for events
@@ -50,18 +53,29 @@ bool poll() {
                 break;
             case SDL_MOUSEMOTION:
                 if (left_mouse_down) {
-                    _angle = angle(event.motion.x, event.motion.y, 512, 384) - start_angle;
+                    _angle1 = angle(event.motion.x, event.motion.y, 512, 384) - start_angle1;
+                }
+                if (right_mouse_down) {
+                    _angle2 = std::abs(angle(event.motion.x, event.motion.y, 512, 384) - start_angle2);
+                    if (_angle2 > 70) {
+                        _angle2 = 70;
+                    }
                 }
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == 1) {
                     left_mouse_down = true;
-                    start_angle = angle(event.button.x, event.button.y, 512, 384) - _angle;
+                    start_angle1 = angle(event.button.x, event.button.y, 512, 384) - _angle1;
+                } else if (event.button.button == 3) {
+                    right_mouse_down = true;
+                    start_angle2 = angle(event.button.x, event.button.y, 512, 384) - _angle2;
                 }
                 break;
             case SDL_MOUSEBUTTONUP:
                 if (event.button.button == 1) {
                     left_mouse_down = false;
+                } else if (event.button.button == 3) {
+                    right_mouse_down = false;
                 }
                 break;
             default:
@@ -144,12 +158,14 @@ void render(GLuint texid) {
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-512, 512, 384, -384, -1, 1);
+    glOrtho(-512, 512, 384, -384, -1000, 1000);
 
     // Render the slippy map parts
+    glPushMatrix();
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texid);
-    glRotated(_angle, 0.0, 0.0, -1.0);
+    glRotated(_angle2, 1.0, 0.0, 0.0);
+    glRotated(_angle1, 0.0, 0.0, -1.0);
     glBegin(GL_QUADS);
         glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
         glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
@@ -157,6 +173,7 @@ void render(GLuint texid) {
         glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
     glEnd();
     glDisable(GL_TEXTURE_2D);
+    glPopMatrix();
 }
 
 int main(int argc, char **argv) {
