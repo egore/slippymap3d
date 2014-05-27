@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <cmath>
+#include <boost/filesystem.hpp>
 
 #include <unistd.h>
 #include <time.h>
@@ -8,6 +9,50 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_image.h>
+
+#include <curl/curl.h>
+
+CURL* curl = 0;
+
+class Tile {
+public:
+    int zoom;
+    int x;
+    int y;
+    GLuint texid;
+    Tile* get_east() {
+        Tile* tile = new Tile();
+        tile->zoom = zoom;
+        tile->x = x-1;
+        tile->y = y;
+        tile->texid = 0;
+        return tile;
+    }
+    Tile* get_north() {
+        Tile* tile = new Tile();
+        tile->zoom = zoom;
+        tile->x = x;
+        tile->y = y-1;
+        tile->texid = 0;
+        return tile;
+    }
+    Tile* get_south() {
+        Tile* tile = new Tile();
+        tile->zoom = zoom;
+        tile->x = x;
+        tile->y = y+1;
+        tile->texid = 0;
+        return tile;
+    }
+    Tile* get_west() {
+        Tile* tile = new Tile();
+        tile->zoom = zoom;
+        tile->x = x+1;
+        tile->y = y;
+        tile->texid = 0;
+        return tile;
+    }
+};
 
 int long2tilex(double lon, int z)  {
     return (int)(floor((lon + 180.0) / 360.0 * pow(2.0, z)));
@@ -17,10 +62,45 @@ int lat2tiley(double lat, int z) {
     return (int)(floor((1.0 - log( tan(lat * M_PI/180.0) + 1.0 / cos(lat * M_PI/180.0)) / M_PI) / 2.0 * pow(2.0, z)));
 }
 
-std::string get_filename(int zoom, double latitude, double longitude) {
+Tile* get_tile(int zoom, double latitude, double longitude) {
+    Tile* tile = new Tile();
+    tile->zoom = zoom;
+    tile->x = long2tilex(longitude, zoom);
+    tile->y = lat2tiley(latitude, zoom);
+    return tile;
+}
+
+std::string get_filename(Tile &tile) {
     std::stringstream filename;
-    filename << "../16/" << long2tilex(7.599485, 16) << '/' << lat2tiley(50.356718, 16) << ".png";
+    filename << tile.zoom << "/" << tile.x << '/' << tile.y << ".png";
     return filename.str();
+}
+
+size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    size_t written;
+    written = fwrite(ptr, size, nmemb, stream);
+    return written;
+}
+
+void download_image(Tile& tile) {
+    std::stringstream dirname;
+    dirname << "../" << tile.zoom << "/" << tile.x;
+    std::string dir = dirname.str();
+    boost::filesystem::create_directories(dir);
+    std::string filename = get_filename(tile);
+    std::string url = "http://a.tile.openstreetmap.org/" + filename;
+    std::string file = "../" + filename;
+    FILE* fp = fopen(file.c_str(), "wb");
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+    CURLcode res = curl_easy_perform(curl);
+    if (res != CURLE_OK) {
+        std::cerr << "Failed to download: " << url << std::endl;
+    } else {
+        std::cout << "Downloaded " << file << std::endl;
+    }
+    fclose(fp);
 }
 
 bool left_mouse_down = false;
@@ -86,7 +166,13 @@ bool poll() {
     return true;
 }
 
-int load_image(std::string filename) {
+int load_image(Tile& tile) {
+
+    std::string filename = "../" + get_filename(tile);
+    if (!boost::filesystem::exists(filename)) {
+        download_image(tile);
+    }
+
     SDL_Surface *texture = IMG_Load(filename.c_str());
     GLuint texid;
 
@@ -152,7 +238,7 @@ int load_image(std::string filename) {
 
 #define SIZE 110.0
 
-void render(GLuint texid, GLuint texid2, GLuint texid3) {
+void render(Tile * center_tile, Tile* left_tile, Tile* top_tile, Tile* bottom_tile, Tile* right_tile) {
     // Clear with black
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -166,7 +252,7 @@ void render(GLuint texid, GLuint texid2, GLuint texid3) {
         glRotated(_angle2, 1.0, 0.0, 0.0);
         glRotated(_angle1, 0.0, 0.0, -1.0);
         glPushMatrix();
-            glBindTexture(GL_TEXTURE_2D, texid);
+            glBindTexture(GL_TEXTURE_2D, center_tile->texid);
             glBegin(GL_QUADS);
                 glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
                 glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
@@ -175,7 +261,27 @@ void render(GLuint texid, GLuint texid2, GLuint texid3) {
             glEnd();
         glPopMatrix();
         glPushMatrix();
-            glBindTexture(GL_TEXTURE_2D, texid2);
+            glBindTexture(GL_TEXTURE_2D, left_tile->texid);
+            glTranslated(-SIZE*2, 0, 0);
+            glBegin(GL_QUADS);
+                glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
+                glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
+                glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
+                glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
+            glEnd();
+        glPopMatrix();
+        glPushMatrix();
+            glBindTexture(GL_TEXTURE_2D, top_tile->texid);
+            glTranslated(0, -SIZE*2, 0);
+            glBegin(GL_QUADS);
+                glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
+                glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
+                glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
+                glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
+            glEnd();
+        glPopMatrix();
+        glPushMatrix();
+            glBindTexture(GL_TEXTURE_2D, bottom_tile->texid);
             glTranslated(0, SIZE*2, 0);
             glBegin(GL_QUADS);
                 glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
@@ -183,10 +289,10 @@ void render(GLuint texid, GLuint texid2, GLuint texid3) {
                 glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
                 glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
             glEnd();
-            glBindTexture(GL_TEXTURE_2D, texid3);
-            glPopMatrix();
-            glPushMatrix();
-            glTranslated(-SIZE*2, SIZE*2, 0);
+        glPopMatrix();
+        glPushMatrix();
+            glBindTexture(GL_TEXTURE_2D, right_tile->texid);
+            glTranslated(SIZE*2, 0, 0);
             glBegin(GL_QUADS);
                 glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
                 glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
@@ -205,20 +311,30 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    curl = curl_easy_init();
+    if (!curl) {
+        std::cerr << "Failed to initialize curl" << std::endl;
+        return 1;
+    }
+
     // Create an OpenGL window
     SDL_Window* window = SDL_CreateWindow("slippymap3d", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
     // Load the file matching the given coordinates
-    std::string filename = get_filename(16, lat2tiley(50.356718, 16), long2tilex(7.599485, 16));
-    int texid = load_image(filename);
+    Tile* center_tile = get_tile(16, 50.356718, 7.599485);
+    center_tile->texid = load_image(*center_tile);
 
-    std::string filename2 = "../16/34151/22125.png";
-    int texid2 = load_image(filename2);
-    std::string filename3 = "../16/34150/22125.png";
-    int texid3 = load_image(filename3);
+    Tile* left_tile = center_tile->get_east();
+    left_tile->texid = load_image(*left_tile);
+    Tile* top_tile = center_tile->get_north();
+    top_tile->texid = load_image(*top_tile);
+    Tile* right_tile = center_tile->get_west();
+    right_tile->texid = load_image(*right_tile);
+    Tile* bottom_tile = center_tile->get_south();
+    bottom_tile->texid = load_image(*bottom_tile);
 
-    if (texid >= 0 && texid2 >= 0 && texid3 >= 0) {
+    if (top_tile->texid >= 0 && left_tile->texid >= 0 && center_tile->texid >= 0 && right_tile->texid >= 0 && bottom_tile->texid >= 0) {
 
         struct timespec spec;
         clock_gettime(CLOCK_REALTIME, &spec);
@@ -239,13 +355,21 @@ int main(int argc, char **argv) {
             }
 
 
-            render(texid, texid2, texid3);
+            render(center_tile, left_tile, top_tile, bottom_tile, right_tile);
             SDL_GL_SwapWindow(window);
         }
 
     }
+
+    delete right_tile;
+    delete bottom_tile;
+    delete top_tile;
+    delete left_tile;
+    delete center_tile;
+
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
+    curl_easy_cleanup(curl);
     SDL_Quit();
 
     return 0;
