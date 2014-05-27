@@ -88,7 +88,7 @@ void download_image(Tile& tile) {
     std::string dir = dirname.str();
     boost::filesystem::create_directories(dir);
     std::string filename = get_filename(tile);
-    std::string url = "http://a.tile.openstreetmap.org/" + filename;
+    std::string url = "http://localhost/osm_tiles/" + filename;
     std::string file = "../" + filename;
     FILE* fp = fopen(file.c_str(), "wb");
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -137,10 +137,7 @@ bool poll() {
                     _angle1 = angle(event.motion.x, event.motion.y, 512, 384) - start_angle1;
                 }
                 if (right_mouse_down) {
-                    _angle2 = std::abs(angle(event.motion.x, event.motion.y, 512, 384) - start_angle2);
-                    if (_angle2 > 70) {
-                        _angle2 = 70;
-                    }
+                    _angle2 = std::max(384 - event.motion.y, 0) * 70 / 384;
                 }
                 break;
             case SDL_MOUSEBUTTONDOWN:
