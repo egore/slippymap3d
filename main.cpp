@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <cmath>
+#include <map>
 #include <boost/filesystem.hpp>
 
 #include <unistd.h>
@@ -14,6 +15,18 @@
 
 CURL* curl = 0;
 
+class Tile;
+
+std::map<std::string, Tile*> tiles;
+
+std::string tile_id(int zoom, int x, int y) {
+    std::stringstream ss;
+    ss << zoom << "/" << x << "/" << y;
+    return ss.str();
+}
+
+Tile *get_tile(int zoom, int x, int y);
+
 class Tile {
 public:
     int zoom;
@@ -21,38 +34,33 @@ public:
     int y;
     GLuint texid;
     Tile* get_east() {
-        Tile* tile = new Tile();
-        tile->zoom = zoom;
-        tile->x = x-1;
-        tile->y = y;
-        tile->texid = 0;
-        return tile;
+        return get_tile(zoom, x-1, y);
     }
     Tile* get_north() {
-        Tile* tile = new Tile();
-        tile->zoom = zoom;
-        tile->x = x;
-        tile->y = y-1;
-        tile->texid = 0;
-        return tile;
+        return get_tile(zoom, x, y-1);
     }
     Tile* get_south() {
-        Tile* tile = new Tile();
-        tile->zoom = zoom;
-        tile->x = x;
-        tile->y = y+1;
-        tile->texid = 0;
-        return tile;
+        return get_tile(zoom, x, y+1);
     }
     Tile* get_west() {
-        Tile* tile = new Tile();
-        tile->zoom = zoom;
-        tile->x = x+1;
-        tile->y = y;
-        tile->texid = 0;
-        return tile;
+        return get_tile(zoom, x+1, y);
     }
 };
+
+Tile *get_tile(int zoom, int x, int y) {
+    std::string id = tile_id(zoom, x, y);
+    std::map<std::string, Tile*>::iterator tile_iter = tiles.find(id);
+    if (tile_iter != tiles.end()) {
+        return tile_iter->second;
+    }
+    Tile* tile = new Tile();
+    tile->zoom = zoom;
+    tile->x = x;
+    tile->y = y;
+    tile->texid = 0;
+    tiles[id] = tile;
+    return tile;
+}
 
 int long2tilex(double lon, int z)  {
     return (int)(floor((lon + 180.0) / 360.0 * pow(2.0, z)));
@@ -63,11 +71,9 @@ int lat2tiley(double lat, int z) {
 }
 
 Tile* get_tile(int zoom, double latitude, double longitude) {
-    Tile* tile = new Tile();
-    tile->zoom = zoom;
-    tile->x = long2tilex(longitude, zoom);
-    tile->y = lat2tiley(latitude, zoom);
-    return tile;
+    int x = long2tilex(longitude, zoom);
+    int y = lat2tiley(latitude, zoom);
+    return get_tile(zoom, x, y);
 }
 
 std::string get_filename(Tile &tile) {
@@ -358,11 +364,10 @@ int main(int argc, char **argv) {
 
     }
 
-    delete right_tile;
-    delete bottom_tile;
-    delete top_tile;
-    delete left_tile;
-    delete center_tile;
+    for (std::pair<std::string, Tile*> tile : tiles) {
+        delete tile.second;
+    }
+    tiles.clear();
 
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
