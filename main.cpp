@@ -47,6 +47,8 @@ public:
     }
 };
 
+void load_image(Tile& tile);
+
 Tile *get_tile(int zoom, int x, int y) {
     std::string id = tile_id(zoom, x, y);
     std::map<std::string, Tile*>::iterator tile_iter = tiles.find(id);
@@ -57,7 +59,8 @@ Tile *get_tile(int zoom, int x, int y) {
     tile->zoom = zoom;
     tile->x = x;
     tile->y = y;
-    tile->texid = 0;
+    // TODO use dummy texture first and load async
+    load_image(*tile);
     tiles[id] = tile;
     return tile;
 }
@@ -169,7 +172,7 @@ bool poll() {
     return true;
 }
 
-int load_image(Tile& tile) {
+void load_image(Tile& tile) {
 
     std::string filename = "../" + get_filename(tile);
     if (!boost::filesystem::exists(filename)) {
@@ -233,15 +236,15 @@ int load_image(Tile& tile) {
         std::cout << "SUCCESS" << std::endl;
     } else {
         std::cout << "FAILED" << std::endl;
-        return -1;
+        tile.texid = 0;
     }
 
-    return texid;
+    tile.texid = texid;
 }
 
 #define SIZE 110.0
 
-void render(Tile * center_tile, Tile* left_tile, Tile* top_tile, Tile* bottom_tile, Tile* right_tile) {
+void render(Tile * center_tile) {
     // Clear with black
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -264,7 +267,7 @@ void render(Tile * center_tile, Tile* left_tile, Tile* top_tile, Tile* bottom_ti
             glEnd();
         glPopMatrix();
         glPushMatrix();
-            glBindTexture(GL_TEXTURE_2D, left_tile->texid);
+            glBindTexture(GL_TEXTURE_2D, center_tile->get_east()->texid);
             glTranslated(-SIZE*2, 0, 0);
             glBegin(GL_QUADS);
                 glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
@@ -274,7 +277,7 @@ void render(Tile * center_tile, Tile* left_tile, Tile* top_tile, Tile* bottom_ti
             glEnd();
         glPopMatrix();
         glPushMatrix();
-            glBindTexture(GL_TEXTURE_2D, top_tile->texid);
+            glBindTexture(GL_TEXTURE_2D, center_tile->get_north()->texid);
             glTranslated(0, -SIZE*2, 0);
             glBegin(GL_QUADS);
                 glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
@@ -284,7 +287,7 @@ void render(Tile * center_tile, Tile* left_tile, Tile* top_tile, Tile* bottom_ti
             glEnd();
         glPopMatrix();
         glPushMatrix();
-            glBindTexture(GL_TEXTURE_2D, bottom_tile->texid);
+            glBindTexture(GL_TEXTURE_2D, center_tile->get_south()->texid);
             glTranslated(0, SIZE*2, 0);
             glBegin(GL_QUADS);
                 glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
@@ -294,7 +297,7 @@ void render(Tile * center_tile, Tile* left_tile, Tile* top_tile, Tile* bottom_ti
             glEnd();
         glPopMatrix();
         glPushMatrix();
-            glBindTexture(GL_TEXTURE_2D, right_tile->texid);
+            glBindTexture(GL_TEXTURE_2D, center_tile->get_west()->texid);
             glTranslated(SIZE*2, 0, 0);
             glBegin(GL_QUADS);
                 glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
@@ -326,42 +329,28 @@ int main(int argc, char **argv) {
 
     // Load the file matching the given coordinates
     Tile* center_tile = get_tile(16, 50.356718, 7.599485);
-    center_tile->texid = load_image(*center_tile);
 
-    Tile* left_tile = center_tile->get_east();
-    left_tile->texid = load_image(*left_tile);
-    Tile* top_tile = center_tile->get_north();
-    top_tile->texid = load_image(*top_tile);
-    Tile* right_tile = center_tile->get_west();
-    right_tile->texid = load_image(*right_tile);
-    Tile* bottom_tile = center_tile->get_south();
-    bottom_tile->texid = load_image(*bottom_tile);
+    struct timespec spec;
+    clock_gettime(CLOCK_REALTIME, &spec);
+    long base_time = spec.tv_sec * 1000 + round(spec.tv_nsec / 1.0e6);
+    int frames = 0;
+    while(true) {
+        if (!poll()) {
+            break;
+        }
+        frames++;
 
-    if (top_tile->texid >= 0 && left_tile->texid >= 0 && center_tile->texid >= 0 && right_tile->texid >= 0 && bottom_tile->texid >= 0) {
-
-        struct timespec spec;
         clock_gettime(CLOCK_REALTIME, &spec);
-        long base_time = spec.tv_sec * 1000 + round(spec.tv_nsec / 1.0e6);
-        int frames = 0;
-        while(true) {
-            if (!poll()) {
-                break;
-            }
-            frames++;
-
-            clock_gettime(CLOCK_REALTIME, &spec);
-            long time_in_mill = spec.tv_sec * 1000 + round(spec.tv_nsec / 1.0e6);
-            if ((time_in_mill - base_time) > 1000.0) {
-                std::cout << frames * 1000.0 / (time_in_mill - base_time) << " fps" << std::endl;
-                base_time = time_in_mill;
-                frames=0;
-            }
-
-
-            render(center_tile, left_tile, top_tile, bottom_tile, right_tile);
-            SDL_GL_SwapWindow(window);
+        long time_in_mill = spec.tv_sec * 1000 + round(spec.tv_nsec / 1.0e6);
+        if ((time_in_mill - base_time) > 1000.0) {
+            std::cout << frames * 1000.0 / (time_in_mill - base_time) << " fps" << std::endl;
+            base_time = time_in_mill;
+            frames=0;
         }
 
+
+        render(center_tile);
+        SDL_GL_SwapWindow(window);
     }
 
     for (std::pair<std::string, Tile*> tile : tiles) {
