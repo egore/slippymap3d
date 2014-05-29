@@ -71,8 +71,8 @@ bool poll() {
 
 #define SIZE 150.0
 
-void render(int zoom, double x, double y) {
-    Tile* center_tile = TileFactory::instance()->get_tile(zoom, x, y);
+void render(int zoom, double latitude, double longitude) {
+    Tile* center_tile = TileFactory::instance()->get_tile(zoom, latitude, longitude);
 
     // Clear with black
     glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -139,6 +139,8 @@ int main(int argc, char **argv) {
 
     // Load the file matching the given coordinates
 
+    double latitude = 50.356718;
+    double longitude = 7.599485;
 
     struct timespec spec;
     clock_gettime(CLOCK_REALTIME, &spec);
@@ -158,7 +160,8 @@ int main(int argc, char **argv) {
             frames=0;
         }
 
-        render(16, 50.356718, 7.599485);
+        render(16, latitude, longitude);
+
         SDL_GL_SwapWindow(window);
     }
 

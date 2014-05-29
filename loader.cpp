@@ -48,6 +48,11 @@ void Loader::load_image(Tile& tile) {
         ioService.post(boost::bind(&Loader::download_image, this, &tile));
         return;
     }
+    if (boost::filesystem::file_size(filename) == 0) {
+        boost::filesystem::remove(filename);
+        ioService.post(boost::bind(&Loader::download_image, this, &tile));
+        return;
+    }
 
     open_image(tile);
 }
