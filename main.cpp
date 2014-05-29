@@ -250,7 +250,7 @@ void load_image(Tile& tile) {
     tile.texid = texid;
 }
 
-#define SIZE 110.0
+#define SIZE 150.0
 
 void render(Tile * center_tile) {
     // Clear with black
@@ -265,55 +265,29 @@ void render(Tile * center_tile) {
     glEnable(GL_TEXTURE_2D);
         glRotated(_angle2, 1.0, 0.0, 0.0);
         glRotated(_angle1, 0.0, 0.0, -1.0);
-        glPushMatrix();
-            glBindTexture(GL_TEXTURE_2D, center_tile->texid);
-            glBegin(GL_QUADS);
-                glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
-                glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
-                glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
-                glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
-            glEnd();
-        glPopMatrix();
-        glPushMatrix();
-            glBindTexture(GL_TEXTURE_2D, center_tile->get_east()->texid);
-            glTranslated(-SIZE*2, 0, 0);
-            glBegin(GL_QUADS);
-                glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
-                glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
-                glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
-                glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
-            glEnd();
-        glPopMatrix();
-        glPushMatrix();
-            glBindTexture(GL_TEXTURE_2D, center_tile->get_north()->texid);
-            glTranslated(0, -SIZE*2, 0);
-            glBegin(GL_QUADS);
-                glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
-                glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
-                glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
-                glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
-            glEnd();
-        glPopMatrix();
-        glPushMatrix();
-            glBindTexture(GL_TEXTURE_2D, center_tile->get_south()->texid);
-            glTranslated(0, SIZE*2, 0);
-            glBegin(GL_QUADS);
-                glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
-                glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
-                glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
-                glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
-            glEnd();
-        glPopMatrix();
-        glPushMatrix();
-            glBindTexture(GL_TEXTURE_2D, center_tile->get_west()->texid);
-            glTranslated(SIZE*2, 0, 0);
-            glBegin(GL_QUADS);
-                glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
-                glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
-                glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
-                glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
-            glEnd();
-        glPopMatrix();
+
+        int top = -6;
+        int left = -6;
+        int bottom = 6;
+        int right = 6;
+
+        Tile* current = center_tile->get(left, top);
+        for (int y = top; y < bottom; y++) {
+            for (int x = left; x < right; x++) {
+                glPushMatrix();
+                    glTranslated(x*SIZE*2, y*SIZE*2, 0);
+                    glBindTexture(GL_TEXTURE_2D, current->texid);
+                    glBegin(GL_QUADS);
+                        glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
+                        glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
+                        glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
+                        glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
+                    glEnd();
+                glPopMatrix();
+                current = current->get_west();
+            }
+            current = current->get(-(std::abs(left) + std::abs(right)), 1);
+        }
     glDisable(GL_TEXTURE_2D);
 }
 
