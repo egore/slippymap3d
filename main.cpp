@@ -33,17 +33,20 @@ public:
     int x;
     int y;
     GLuint texid;
+    Tile* get(int x_diff, int y_diff) {
+        return get_tile(zoom, x+x_diff, y+y_diff);
+    }
     Tile* get_east() {
-        return get_tile(zoom, x-1, y);
+        return get(-1, 0);
     }
     Tile* get_north() {
-        return get_tile(zoom, x, y-1);
+        return get(0, -1);
     }
     Tile* get_south() {
-        return get_tile(zoom, x, y+1);
+        return get(0, 1);
     }
     Tile* get_west() {
-        return get_tile(zoom, x+1, y);
+        return get(1, 0);
     }
 };
 
