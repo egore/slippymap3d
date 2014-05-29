@@ -310,7 +310,7 @@ int main(int argc, char **argv) {
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
     // Load the file matching the given coordinates
-    Tile* center_tile = get_tile(16, 50.356718, 7.599485);
+    Tile* center_tile;
 
     struct timespec spec;
     clock_gettime(CLOCK_REALTIME, &spec);
@@ -331,6 +331,7 @@ int main(int argc, char **argv) {
         }
 
 
+        center_tile = get_tile(16, 50.356718, 7.599485);
         render(center_tile);
         SDL_GL_SwapWindow(window);
     }
