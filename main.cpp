@@ -7,6 +7,7 @@
 #include <SDL2/SDL_opengl.h>
 
 #include "tile.h"
+#include "loader.h"
 
 bool left_mouse_down = false;
 bool right_mouse_down = false;
@@ -70,7 +71,9 @@ bool poll() {
 
 #define SIZE 150.0
 
-void render(Tile * center_tile) {
+void render(int zoom, double x, double y) {
+    Tile* center_tile = TileFactory::instance()->get_tile(zoom, x, y);
+
     // Clear with black
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -92,6 +95,11 @@ void render(Tile * center_tile) {
         Tile* current = center_tile->get(left, top);
         for (int y = top; y < bottom; y++) {
             for (int x = left; x < right; x++) {
+
+                if (current->texid == 0) {
+                    Loader::instance()->open_image(*current);
+                }
+
                 glPushMatrix();
                     glTranslated(x*SIZE*2, y*SIZE*2, 0);
                     glBindTexture(GL_TEXTURE_2D, current->texid);
@@ -130,7 +138,7 @@ int main(int argc, char **argv) {
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
     // Load the file matching the given coordinates
-    Tile* center_tile;
+
 
     struct timespec spec;
     clock_gettime(CLOCK_REALTIME, &spec);
@@ -150,9 +158,7 @@ int main(int argc, char **argv) {
             frames=0;
         }
 
-
-        center_tile = TileFactory::instance()->get_tile(16, 50.356718, 7.599485);
-        render(center_tile);
+        render(16, 50.356718, 7.599485);
         SDL_GL_SwapWindow(window);
     }
 

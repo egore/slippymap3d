@@ -1,6 +1,7 @@
 #include <sstream>
 #include <boost/filesystem.hpp>
 #include <SDL2/SDL_image.h>
+#include <curl/curl.h>
 
 #include "loader.h"
 
@@ -12,12 +13,19 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     return written;
 }
 
-bool Loader::download_image(Tile& tile) {
+void Loader::download_image(Tile* tile) {
+
+    CURL* curl = curl_easy_init();
+    if (curl == nullptr) {
+        std::cerr << "Failed to initialize curl" << std::endl;
+        return;
+    }
+
     std::stringstream dirname;
-    dirname << "../" << tile.zoom << "/" << tile.x;
+    dirname << "../" << tile->zoom << "/" << tile->x;
     std::string dir = dirname.str();
     boost::filesystem::create_directories(dir);
-    std::string filename = tile.get_filename();
+    std::string filename = tile->get_filename();
     std::string url = "http://localhost/osm_tiles/" + filename;
     std::string file = "../" + filename;
     FILE* fp = fopen(file.c_str(), "wb");
@@ -26,27 +34,27 @@ bool Loader::download_image(Tile& tile) {
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
     CURLcode res = curl_easy_perform(curl);
     fclose(fp);
+    curl_easy_cleanup(curl);
     if (res != CURLE_OK) {
-        std::cerr << "Failed to download: " << url << std::endl;
-        return false;
+        std::cerr << "Failed to download: " << url << " " << res << std::endl;
     } else {
-        std::cout << "Downloaded " << file << std::endl;
-        return true;
+        tile->texid = 0;
     }
 }
 
 void Loader::load_image(Tile& tile) {
-
     std::string filename = "../" + tile.get_filename();
     if (!boost::filesystem::exists(filename)) {
-        if (!download_image(tile)) {
-            tile.texid = 0;
-            return;
-        }
+        ioService.post(boost::bind(&Loader::download_image, this, &tile));
+        return;
     }
 
+    open_image(tile);
+}
+
+void Loader::open_image(Tile &tile) {
+    std::string filename = "../" + tile.get_filename();
     SDL_Surface *texture = IMG_Load(filename.c_str());
-    GLuint texid;
 
     char tmp[4096];
     getcwd(tmp, 4096);
@@ -86,6 +94,7 @@ void Loader::load_image(Tile& tile) {
             std::cout << " -> " << SDL_GetPixelFormatName(texture->format->format) << ") ";
         }
 
+        GLuint texid;
         glGenTextures(1, &texid);
         glBindTexture(GL_TEXTURE_2D, texid);
 
@@ -99,11 +108,12 @@ void Loader::load_image(Tile& tile) {
         }
         SDL_FreeSurface(texture);
 
+        tile.texid = texid;
+
         std::cout << "SUCCESS" << std::endl;
     } else {
+        tile.texid = TileFactory::instance()->get_dummy();
         std::cout << "FAILED" << std::endl;
-        tile.texid = 0;
     }
 
-    tile.texid = texid;
 }

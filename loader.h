@@ -2,8 +2,8 @@
 #define _SM3D_LOADER_H_
 
 #include <iostream>
-
-#include <curl/curl.h>
+#include <boost/thread.hpp>
+#include <boost/asio/io_service.hpp>
 
 #include "tile.h"
 
@@ -18,24 +18,27 @@ public:
     }
 
     void load_image(Tile& tile);
+    void open_image(Tile& tile);
 private:
     static Loader* _instance;
     Loader() {
-        curl = curl_easy_init();
-        if (curl == nullptr) {
-            std::cerr << "Failed to initialize curl" << std::endl;
+        work = new boost::asio::io_service::work(ioService);
+        for (int i = 0; i < 5; i++) {
+            pool.create_thread(boost::bind(&boost::asio::io_service::run, &ioService));
         }
     }
     Loader(const Loader&) {}
     ~Loader() {
-        if (curl != nullptr) {
-            curl_easy_cleanup(curl);
-        }
+        ioService.stop();
+        pool.join_all();
+        delete work;
     }
 
-    bool download_image(Tile& tile);
+    boost::thread_group pool;
+    boost::asio::io_service ioService;
+    boost::asio::io_service::work * work;
 
-    CURL* curl = nullptr;
+    void download_image(Tile* tile);
 
     class CGuard {
     public:

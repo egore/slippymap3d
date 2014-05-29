@@ -33,9 +33,19 @@ public:
     }
     Tile* get_tile(int zoom, double latitude, double longitude);
     Tile *get_tile(int zoom, int x, int y);
+    GLuint get_dummy() {
+        return dummy;
+    }
 private:
     static TileFactory* _instance;
-    TileFactory() {}
+    GLuint dummy;
+    TileFactory() {
+        glGenTextures(1, &this->dummy);
+        glBindTexture(GL_TEXTURE_2D, this->dummy);
+
+        unsigned char empty[3] = {0, 0, 0};
+        glTexImage2D(GL_TEXTURE_2D, 0, 3, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, empty);
+    }
     TileFactory(const TileFactory&) {}
     ~TileFactory();
     std::string tile_id(int zoom, int x, int y);

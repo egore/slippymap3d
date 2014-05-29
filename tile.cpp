@@ -63,7 +63,7 @@ Tile* TileFactory::get_tile(int zoom, int x, int y) {
     tile->zoom = zoom;
     tile->x = x;
     tile->y = y;
-    // TODO use dummy texture first and load async
+    tile->texid = dummy;
     Loader::instance()->load_image(*tile);
     tiles[id] = tile;
     return tile;
