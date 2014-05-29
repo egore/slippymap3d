@@ -289,6 +289,14 @@ void render(Tile * center_tile) {
             current = current->get(-(std::abs(left) + std::abs(right)), 1);
         }
     glDisable(GL_TEXTURE_2D);
+
+    glColor3d(1.0, 0.5, 0.0);
+    glBegin(GL_TRIANGLES);
+        glVertex3f(-10,  15, 1);
+        glVertex3f( 10,  15, 1);
+        glVertex3f(  0, -10, 1);
+    glEnd();
+    glColor3d(1.0, 1.0, 1.0);
 }
 
 int main(int argc, char **argv) {
