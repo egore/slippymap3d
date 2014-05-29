@@ -94,7 +94,7 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     return written;
 }
 
-void download_image(Tile& tile) {
+bool download_image(Tile& tile) {
     std::stringstream dirname;
     dirname << "../" << tile.zoom << "/" << tile.x;
     std::string dir = dirname.str();
@@ -107,12 +107,14 @@ void download_image(Tile& tile) {
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
     CURLcode res = curl_easy_perform(curl);
+    fclose(fp);
     if (res != CURLE_OK) {
         std::cerr << "Failed to download: " << url << std::endl;
+        return false;
     } else {
         std::cout << "Downloaded " << file << std::endl;
+        return true;
     }
-    fclose(fp);
 }
 
 bool left_mouse_down = false;
@@ -179,7 +181,10 @@ void load_image(Tile& tile) {
 
     std::string filename = "../" + get_filename(tile);
     if (!boost::filesystem::exists(filename)) {
-        download_image(tile);
+        if (!download_image(tile)) {
+            tile.texid = 0;
+            return;
+        }
     }
 
     SDL_Surface *texture = IMG_Load(filename.c_str());
