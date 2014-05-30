@@ -9,8 +9,12 @@
 #include "tile.h"
 #include "loader.h"
 
+double latitude = 50.356718;
+double longitude = 7.599485;
+
 bool left_mouse_down = false;
 bool right_mouse_down = false;
+bool middle_mouse_down = false;
 
 double angle(int p1x, int p1y, int p2x, int p2y) {
     float xDiff = p2x - p1x;
@@ -45,6 +49,11 @@ bool poll() {
                 if (right_mouse_down) {
                     _angle2 = std::max(384 - event.motion.y, 0) * 70 / 384;
                 }
+                if (middle_mouse_down) {
+                    // TODO this does not work properly after rotating the map
+                    latitude += event.motion.yrel * 0.00001; // TODO use proper scale matching the zoom
+                    longitude -= event.motion.xrel * 0.00001; // TODO use proper scale matching the zoom
+                }
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == 1) {
@@ -53,6 +62,8 @@ bool poll() {
                 } else if (event.button.button == 3) {
                     right_mouse_down = true;
                     start_angle2 = angle(event.button.x, event.button.y, 512, 384) - _angle2;
+                } else if (event.button.button == 2) {
+                    middle_mouse_down = true;
                 }
                 break;
             case SDL_MOUSEBUTTONUP:
@@ -60,6 +71,8 @@ bool poll() {
                     left_mouse_down = false;
                 } else if (event.button.button == 3) {
                     right_mouse_down = false;
+                } else if (event.button.button == 2) {
+                    middle_mouse_down = false;
                 }
                 break;
             default:
@@ -153,9 +166,6 @@ int main(int argc, char **argv) {
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
     // Load the file matching the given coordinates
-
-    double latitude = 50.356718;
-    double longitude = 7.599485;
 
     struct timespec spec;
     clock_gettime(CLOCK_REALTIME, &spec);
