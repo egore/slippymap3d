@@ -20,6 +20,14 @@ public:
     std::string get_filename();
 };
 
+extern int long2tilex(double lon, int z);
+
+extern int lat2tiley(double lat, int z);
+
+extern double tilex2long(int x, int z);
+
+extern double tiley2lat(int y, int z);
+
 class TileFactory {
 private:
     std::map<std::string, Tile*> tiles;
