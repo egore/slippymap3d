@@ -14,12 +14,16 @@ struct s_window_state {
     int height;
 } window_state;
 
-double latitude = 50.356718;
-double longitude = 7.599485;
+struct s_player_state {
+    double latitude = 50.356718;
+    double longitude = 7.599485;
+} player_state;
 
-bool left_mouse_down = false;
-bool right_mouse_down = false;
-bool middle_mouse_down = false;
+struct s_input_state {
+    bool left_mouse_down = false;
+    bool right_mouse_down = false;
+    bool middle_mouse_down = false;
+} input_state;
 
 double angle(int p1x, int p1y, int p2x, int p2y) {
     float xDiff = p2x - p1x;
@@ -56,37 +60,37 @@ bool poll() {
                 }
                 break;
             case SDL_MOUSEMOTION:
-                if (left_mouse_down) {
+                if (input_state.left_mouse_down) {
                     _angle1 = angle(event.motion.x, event.motion.y, (window_state.width / 2), (window_state.height / 2)) - start_angle1;
                 }
-                if (right_mouse_down) {
+                if (input_state.right_mouse_down) {
                     _angle2 = std::max((window_state.height / 2) - event.motion.y, 0) * MAX_TILT / (window_state.height / 2);
                 }
-                if (middle_mouse_down) {
+                if (input_state.middle_mouse_down) {
                     long double _cos = std::cos(_angle1 * M_PI / 180);
                     long double _sin = std::sin(_angle1 * M_PI / 180);
-                    latitude += Y_16 * (event.motion.yrel * _cos + event.motion.xrel * _sin);
-                    longitude -= X_16 * (event.motion.xrel * _cos - event.motion.yrel * _sin);
+                    player_state.latitude += Y_16 * (event.motion.yrel * _cos + event.motion.xrel * _sin);
+                    player_state.longitude -= X_16 * (event.motion.xrel * _cos - event.motion.yrel * _sin);
                 }
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == 1) {
-                    left_mouse_down = true;
+                    input_state.left_mouse_down = true;
                     start_angle1 = angle(event.button.x, event.button.y, (window_state.width / 2), (window_state.height / 2)) - _angle1;
                 } else if (event.button.button == 3) {
-                    right_mouse_down = true;
+                    input_state.right_mouse_down = true;
                     start_angle2 = angle(event.button.x, event.button.y, (window_state.width / 2), (window_state.height / 2)) - _angle2;
                 } else if (event.button.button == 2) {
-                    middle_mouse_down = true;
+                    input_state.middle_mouse_down = true;
                 }
                 break;
             case SDL_MOUSEBUTTONUP:
                 if (event.button.button == 1) {
-                    left_mouse_down = false;
+                    input_state.left_mouse_down = false;
                 } else if (event.button.button == 3) {
-                    right_mouse_down = false;
+                    input_state.right_mouse_down = false;
                 } else if (event.button.button == 2) {
-                    middle_mouse_down = false;
+                    input_state.middle_mouse_down = false;
                 }
                 break;
             case SDL_WINDOWEVENT:
@@ -205,7 +209,7 @@ int main(int argc, char **argv) {
             frames=0;
         }
 
-        render(16, latitude, longitude);
+        render(16, player_state.latitude, player_state.longitude);
 
         SDL_GL_SwapWindow(window);
     }
