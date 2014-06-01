@@ -90,33 +90,42 @@ void render(int zoom, double latitude, double longitude) {
     glLoadIdentity();
     glOrtho(-(window_state.width / 2), (window_state.width / 2), (window_state.height / 2), -(window_state.height / 2), -1000, 1000);
 
+    // Rotate and and tilt the world geometry
+    glRotated(viewport_state._angle2, 1.0, 0.0, 0.0);
+    glRotated(viewport_state._angle1, 0.0, 0.0, -1.0);
+
     // Render the slippy map parts
     glEnable(GL_TEXTURE_2D);
-        glRotated(viewport_state._angle2, 1.0, 0.0, 0.0);
-        glRotated(viewport_state._angle1, 0.0, 0.0, -1.0);
-
-        int top = -6;
-        int left = -6;
-        int bottom = 6;
-        int right = 6;
 
         // Top left coordinate of the current tile
         double tile_latitude = tiley2lat(center_tile->y, zoom);
         double tile_longitude = tilex2long(center_tile->x, zoom);
 
+        // Offset of the current tile from the center of the screen
         double lat_diff = (SIZE/2) + ((latitude - tile_latitude) * SIZE / TILE_SIZE_LAT_16);
         double lon_diff = (SIZE/2) + ((tile_longitude - longitude) * SIZE / TILE_SIZE_LON_16);
 
         glPushMatrix();
             glTranslated(lon_diff, lat_diff, 0);
+
+            static const int top = -6;
+            static const int left = -6;
+            static const int bottom = 6;
+            static const int right = 6;
+
+            // Start 'left' and 'top' tiles from the center tile and render down to 'bottom' and
+            // 'right' tiles from the center tile
             Tile* current = center_tile->get(left, top);
             for (int y = top; y < bottom; y++) {
                 for (int x = left; x < right; x++) {
 
+                    // If the texid is set to zero the download was finished successfully and
+                    // the tile can be rendered now properly
                     if (current->texid == 0) {
                         Loader::instance()->open_image(*current);
                     }
 
+                    // Render the tile itself at the correct position
                     glPushMatrix();
                         glTranslated(x*SIZE*2, y*SIZE*2, 0);
                         glBindTexture(GL_TEXTURE_2D, current->texid);
@@ -134,6 +143,7 @@ void render(int zoom, double latitude, double longitude) {
         glPopMatrix();
     glDisable(GL_TEXTURE_2D);
 
+    // Draw the players avatar at the center of the screen
     glColor3d(1.0, 0.5, 0.0);
     glBegin(GL_TRIANGLES);
         glVertex3f(-10,  15, 1);

@@ -25,11 +25,17 @@
 #ifndef _SM3D_GLOBAL_H_
 #define _SM3D_GLOBAL_H_
 
+/**
+ * @brief holds the state of the windows width and height
+ */
 struct s_window_state {
     int width;
     int height;
 };
 
+/**
+ * @brief hold the players current position
+ */
 struct s_player_state {
     double latitude = 50.356718;
     double longitude = 7.599485;
