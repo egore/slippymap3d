@@ -65,8 +65,8 @@ bool poll() {
                 if (middle_mouse_down) {
                     long double _cos = std::cos(_angle1 * M_PI / 180);
                     long double _sin = std::sin(_angle1 * M_PI / 180);
-                    latitude += event.motion.yrel * Y_16 * _cos + event.motion.xrel * X_16 * _sin;
-                    longitude -= event.motion.xrel * X_16 * _cos - event.motion.yrel * Y_16 * _sin;
+                    latitude += Y_16 * (event.motion.yrel * _cos + event.motion.xrel * _sin);
+                    longitude -= X_16 * (event.motion.xrel * _cos - event.motion.yrel * _sin);
                 }
                 break;
             case SDL_MOUSEBUTTONDOWN:
