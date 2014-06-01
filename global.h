@@ -25,6 +25,10 @@
 #ifndef _SM3D_GLOBAL_H_
 #define _SM3D_GLOBAL_H_
 
+#define TILE_SIZE (150.0)
+#define TILE_SIZE_LAT_16 (0.00350434d/2)
+#define TILE_SIZE_LON_16 (0.00549316d/2)
+
 /**
  * @brief holds the state of the windows width and height
  */

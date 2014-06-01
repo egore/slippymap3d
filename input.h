@@ -27,10 +27,12 @@
 
 #include <SDL2/SDL.h>
 
+#include "global.h"
+
 #define MAX_TILT (65)
 
-#define Y_16 (0.000012)
-#define X_16 (0.000019)
+#define Y_16 (TILE_SIZE_LAT_16/TILE_SIZE)
+#define X_16 (TILE_SIZE_LON_16/TILE_SIZE)
 
 struct s_viewport_state {
     double _angle1 = 0.0;

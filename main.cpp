@@ -35,10 +35,6 @@
 #include "input.h"
 #include "global.h"
 
-#define SIZE (150.0)
-#define TILE_SIZE_LAT_16 (0.00350434d/2)
-#define TILE_SIZE_LON_16 (0.00549316d/2)
-
 
 /**
  * @brief poll for events
@@ -102,8 +98,8 @@ void render(int zoom, double latitude, double longitude) {
         double tile_longitude = tilex2long(center_tile->x, zoom);
 
         // Offset of the current tile from the center of the screen
-        double lat_diff = (SIZE/2) + ((latitude - tile_latitude) * SIZE / TILE_SIZE_LAT_16);
-        double lon_diff = (SIZE/2) + ((tile_longitude - longitude) * SIZE / TILE_SIZE_LON_16);
+        double lat_diff = (TILE_SIZE/2) + ((latitude - tile_latitude) * TILE_SIZE / TILE_SIZE_LAT_16);
+        double lon_diff = (TILE_SIZE/2) + ((tile_longitude - longitude) * TILE_SIZE / TILE_SIZE_LON_16);
 
         glPushMatrix();
             glTranslated(lon_diff, lat_diff, 0);
@@ -127,13 +123,13 @@ void render(int zoom, double latitude, double longitude) {
 
                     // Render the tile itself at the correct position
                     glPushMatrix();
-                        glTranslated(x*SIZE*2, y*SIZE*2, 0);
+                        glTranslated(x*TILE_SIZE*2, y*TILE_SIZE*2, 0);
                         glBindTexture(GL_TEXTURE_2D, current->texid);
                         glBegin(GL_QUADS);
-                            glTexCoord2f(0.0, 1.0); glVertex3f(-SIZE, SIZE, 0);
-                            glTexCoord2f(1.0, 1.0); glVertex3f(SIZE, SIZE, 0);
-                            glTexCoord2f(1.0, 0.0); glVertex3f(SIZE, -SIZE, 0);
-                            glTexCoord2f(0.0, 0.0); glVertex3f(-SIZE, -SIZE, 0);
+                            glTexCoord2f(0.0, 1.0); glVertex3f(-TILE_SIZE,  TILE_SIZE, 0);
+                            glTexCoord2f(1.0, 1.0); glVertex3f( TILE_SIZE,  TILE_SIZE, 0);
+                            glTexCoord2f(1.0, 0.0); glVertex3f( TILE_SIZE, -TILE_SIZE, 0);
+                            glTexCoord2f(0.0, 0.0); glVertex3f(-TILE_SIZE, -TILE_SIZE, 0);
                         glEnd();
                     glPopMatrix();
                     current = current->get_west();
