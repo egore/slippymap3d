@@ -27,6 +27,13 @@ double start_angle1 = 0.0;
 double _angle2 = 0.0;
 double start_angle2 = 0.0;
 
+#define SIZE (150.0)
+#define TILE_SIZE_LAT_16 (0.00350434d/2)
+#define TILE_SIZE_LON_16 (0.00549316d/2)
+#define Y_16 (0.000012)
+#define X_16 (0.000019)
+
+
 /**
  * @brief poll for events
  * @return true, if the program should end
@@ -50,9 +57,10 @@ bool poll() {
                     _angle2 = std::max(384 - event.motion.y, 0) * 70 / 384;
                 }
                 if (middle_mouse_down) {
-                    // TODO this does not work properly after rotating the map
-                    latitude += event.motion.yrel * 0.00001; // TODO use proper scale matching the zoom
-                    longitude -= event.motion.xrel * 0.00001; // TODO use proper scale matching the zoom
+                    long double _cos = std::cos(_angle1 * M_PI / 180);
+                    long double _sin = std::sin(_angle1 * M_PI / 180);
+                    latitude += event.motion.yrel * Y_16 * _cos + event.motion.xrel * X_16 * _sin;
+                    longitude -= event.motion.xrel * X_16 * _cos - event.motion.yrel * Y_16 * _sin;
                 }
                 break;
             case SDL_MOUSEBUTTONDOWN:
@@ -81,10 +89,6 @@ bool poll() {
     }
     return true;
 }
-
-#define SIZE 150.0
-#define TILE_SIZE_LAT_16 (0.00350434d/2)
-#define TILE_SIZE_LON_16 (0.00549316d/2)
 
 void render(int zoom, double latitude, double longitude) {
     Tile* center_tile = TileFactory::instance()->get_tile(zoom, latitude, longitude);
