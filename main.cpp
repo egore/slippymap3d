@@ -65,6 +65,7 @@ bool poll() {
                     case SDL_WINDOWEVENT_RESIZED:
                         window_state.width = event.window.data1;
                         window_state.height = event.window.data2;
+                        glViewport(0, 0, window_state.width, window_state.height);
                         break;
                 }
                 break;
