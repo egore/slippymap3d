@@ -9,6 +9,11 @@
 #include "tile.h"
 #include "loader.h"
 
+struct s_window_state {
+    int width;
+    int height;
+} window_state;
+
 double latitude = 50.356718;
 double longitude = 7.599485;
 
@@ -51,10 +56,10 @@ bool poll() {
                 break;
             case SDL_MOUSEMOTION:
                 if (left_mouse_down) {
-                    _angle1 = angle(event.motion.x, event.motion.y, 512, 384) - start_angle1;
+                    _angle1 = angle(event.motion.x, event.motion.y, (window_state.width / 2), (window_state.height / 2)) - start_angle1;
                 }
                 if (right_mouse_down) {
-                    _angle2 = std::max(384 - event.motion.y, 0) * 70 / 384;
+                    _angle2 = std::max((window_state.height / 2) - event.motion.y, 0) * 70 / (window_state.height / 2);
                 }
                 if (middle_mouse_down) {
                     long double _cos = std::cos(_angle1 * M_PI / 180);
@@ -66,10 +71,10 @@ bool poll() {
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == 1) {
                     left_mouse_down = true;
-                    start_angle1 = angle(event.button.x, event.button.y, 512, 384) - _angle1;
+                    start_angle1 = angle(event.button.x, event.button.y, (window_state.width / 2), (window_state.height / 2)) - _angle1;
                 } else if (event.button.button == 3) {
                     right_mouse_down = true;
-                    start_angle2 = angle(event.button.x, event.button.y, 512, 384) - _angle2;
+                    start_angle2 = angle(event.button.x, event.button.y, (window_state.width / 2), (window_state.height / 2)) - _angle2;
                 } else if (event.button.button == 2) {
                     middle_mouse_down = true;
                 }
@@ -99,7 +104,7 @@ void render(int zoom, double latitude, double longitude) {
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-512, 512, 384, -384, -1000, 1000);
+    glOrtho(-(window_state.width / 2), (window_state.width / 2), (window_state.height / 2), -(window_state.height / 2), -1000, 1000);
 
     // Render the slippy map parts
     glEnable(GL_TEXTURE_2D);
@@ -167,6 +172,7 @@ int main(int argc, char **argv) {
 
     // Create an OpenGL window
     SDL_Window* window = SDL_CreateWindow("slippymap3d", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+    SDL_GetWindowSize(window, &window_state.width, &window_state.height);
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
     // Load the file matching the given coordinates
