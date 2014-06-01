@@ -32,6 +32,7 @@ double start_angle1 = 0.0;
 double _angle2 = 0.0;
 double start_angle2 = 0.0;
 
+#define MAX_TILT (65)
 #define SIZE (150.0)
 #define TILE_SIZE_LAT_16 (0.00350434d/2)
 #define TILE_SIZE_LON_16 (0.00549316d/2)
@@ -59,7 +60,7 @@ bool poll() {
                     _angle1 = angle(event.motion.x, event.motion.y, (window_state.width / 2), (window_state.height / 2)) - start_angle1;
                 }
                 if (right_mouse_down) {
-                    _angle2 = std::max((window_state.height / 2) - event.motion.y, 0) * 70 / (window_state.height / 2);
+                    _angle2 = std::max((window_state.height / 2) - event.motion.y, 0) * MAX_TILT / (window_state.height / 2);
                 }
                 if (middle_mouse_down) {
                     long double _cos = std::cos(_angle1 * M_PI / 180);
