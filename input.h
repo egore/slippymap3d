@@ -44,5 +44,6 @@ extern struct s_viewport_state viewport_state;
 extern void handle_mouse_motion(SDL_MouseMotionEvent &motion);
 extern void handle_mouse_button_down(SDL_MouseButtonEvent &button);
 extern void handle_mouse_button_up(SDL_MouseButtonEvent &button);
+extern void handle_mouse_wheel(SDL_MouseWheelEvent &wheel);
 
 #endif

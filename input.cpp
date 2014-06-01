@@ -80,3 +80,7 @@ void handle_mouse_button_up(SDL_MouseButtonEvent &button) {
         input_state.middle_mouse_down = false;
     }
 }
+
+void handle_mouse_wheel(SDL_MouseWheelEvent &wheel) {
+    player_state.zoom += wheel.y;
+}

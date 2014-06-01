@@ -26,8 +26,8 @@
 #define _SM3D_GLOBAL_H_
 
 #define TILE_SIZE (150.0)
-#define TILE_SIZE_LAT_16 (0.00350434d/2)
-#define TILE_SIZE_LON_16 (0.00549316d/2)
+#define TILE_SIZE_LAT_16 (0.00350434/2) /* TODO hardcoding this does not work due to merkator projection */
+#define TILE_SIZE_LON_16 (0.0054931640625/2)
 
 /**
  * @brief holds the state of the windows width and height
@@ -43,6 +43,7 @@ struct s_window_state {
 struct s_player_state {
     double latitude = 50.356718;
     double longitude = 7.599485;
+    int zoom = 16;
 };
 
 extern struct s_window_state window_state;

@@ -60,6 +60,9 @@ bool poll() {
             case SDL_MOUSEBUTTONUP:
                 handle_mouse_button_up(event.button);
                 break;
+            case SDL_MOUSEWHEEL:
+                handle_mouse_wheel(event.wheel);
+                break;
             case SDL_WINDOWEVENT:
                 switch (event.window.event) {
                     case SDL_WINDOWEVENT_RESIZED:
@@ -186,7 +189,7 @@ int main(int argc, char **argv) {
             frames=0;
         }
 
-        render(16, player_state.latitude, player_state.longitude);
+        render(player_state.zoom, player_state.latitude, player_state.longitude);
 
         SDL_GL_SwapWindow(window);
     }
