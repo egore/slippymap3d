@@ -89,6 +89,15 @@ bool poll() {
                     middle_mouse_down = false;
                 }
                 break;
+            case SDL_WINDOWEVENT:
+                switch (event.window.event) {
+                    case SDL_WINDOWEVENT_RESIZED:
+                        window_state.width = event.window.data1;
+                        window_state.height = event.window.data2;
+                        break;
+                }
+
+                break;
             default:
                 break;
         }
@@ -172,7 +181,7 @@ int main(int argc, char **argv) {
     }
 
     // Create an OpenGL window
-    SDL_Window* window = SDL_CreateWindow("slippymap3d", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+    SDL_Window* window = SDL_CreateWindow("slippymap3d", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     SDL_GetWindowSize(window, &window_state.width, &window_state.height);
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
