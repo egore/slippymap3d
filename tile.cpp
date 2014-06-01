@@ -28,6 +28,9 @@
 #include "tile.h"
 #include "loader.h"
 
+Tile::Tile(int zoom, int x, int y, GLuint texid) : zoom(zoom), x(x), y(y), texid(texid) {
+}
+
 Tile* Tile::get(int x_diff, int y_diff) {
     return TileFactory::instance()->get_tile(zoom, x+x_diff, y+y_diff);
 }
@@ -92,11 +95,7 @@ Tile* TileFactory::get_tile(int zoom, int x, int y) {
     if (tile_iter != tiles.end()) {
         return tile_iter->second;
     }
-    Tile* tile = new Tile();
-    tile->zoom = zoom;
-    tile->x = x;
-    tile->y = y;
-    tile->texid = dummy;
+    Tile* tile = new Tile(zoom, x, y, dummy);
     Loader::instance()->load_image(*tile);
     tiles[id] = tile;
     return tile;

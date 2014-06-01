@@ -30,12 +30,16 @@
 
 #include <GL/gl.h>
 
+/**
+ * @brief storage class for a tile
+ */
 class Tile {
 public:
     int zoom;
     int x;
     int y;
     GLuint texid;
+    Tile(int zoom, int x, int y, GLuint texid);
     Tile* get(int x_diff, int y_diff);
     Tile* get_east();
     Tile* get_north();

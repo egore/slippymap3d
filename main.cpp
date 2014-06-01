@@ -42,7 +42,7 @@
 
 /**
  * @brief poll for events
- * @return true, if the program should end
+ * @return false, if the program should end, otherwise true
  */
 bool poll() {
     SDL_Event event;
