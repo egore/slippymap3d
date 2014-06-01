@@ -8,40 +8,12 @@
 
 #include "tile.h"
 #include "loader.h"
+#include "input.h"
+#include "global.h"
 
-struct s_window_state {
-    int width;
-    int height;
-} window_state;
-
-struct s_player_state {
-    double latitude = 50.356718;
-    double longitude = 7.599485;
-} player_state;
-
-struct s_input_state {
-    bool left_mouse_down = false;
-    bool right_mouse_down = false;
-    bool middle_mouse_down = false;
-} input_state;
-
-double angle(int p1x, int p1y, int p2x, int p2y) {
-    float xDiff = p2x - p1x;
-    float yDiff = p2y - p1y;
-    return -atan2(yDiff, xDiff) * (180 / M_PI);
-}
-
-double _angle1 = 0.0;
-double start_angle1 = 0.0;
-double _angle2 = 0.0;
-double start_angle2 = 0.0;
-
-#define MAX_TILT (65)
 #define SIZE (150.0)
 #define TILE_SIZE_LAT_16 (0.00350434d/2)
 #define TILE_SIZE_LON_16 (0.00549316d/2)
-#define Y_16 (0.000012)
-#define X_16 (0.000019)
 
 
 /**
@@ -60,38 +32,13 @@ bool poll() {
                 }
                 break;
             case SDL_MOUSEMOTION:
-                if (input_state.left_mouse_down) {
-                    _angle1 = angle(event.motion.x, event.motion.y, (window_state.width / 2), (window_state.height / 2)) - start_angle1;
-                }
-                if (input_state.right_mouse_down) {
-                    _angle2 = std::max((window_state.height / 2) - event.motion.y, 0) * MAX_TILT / (window_state.height / 2);
-                }
-                if (input_state.middle_mouse_down) {
-                    long double _cos = std::cos(_angle1 * M_PI / 180);
-                    long double _sin = std::sin(_angle1 * M_PI / 180);
-                    player_state.latitude += Y_16 * (event.motion.yrel * _cos + event.motion.xrel * _sin);
-                    player_state.longitude -= X_16 * (event.motion.xrel * _cos - event.motion.yrel * _sin);
-                }
+                handle_mouse_motion(event.motion);
                 break;
             case SDL_MOUSEBUTTONDOWN:
-                if (event.button.button == 1) {
-                    input_state.left_mouse_down = true;
-                    start_angle1 = angle(event.button.x, event.button.y, (window_state.width / 2), (window_state.height / 2)) - _angle1;
-                } else if (event.button.button == 3) {
-                    input_state.right_mouse_down = true;
-                    start_angle2 = angle(event.button.x, event.button.y, (window_state.width / 2), (window_state.height / 2)) - _angle2;
-                } else if (event.button.button == 2) {
-                    input_state.middle_mouse_down = true;
-                }
+                handle_mouse_button_down(event.button);
                 break;
             case SDL_MOUSEBUTTONUP:
-                if (event.button.button == 1) {
-                    input_state.left_mouse_down = false;
-                } else if (event.button.button == 3) {
-                    input_state.right_mouse_down = false;
-                } else if (event.button.button == 2) {
-                    input_state.middle_mouse_down = false;
-                }
+                handle_mouse_button_up(event.button);
                 break;
             case SDL_WINDOWEVENT:
                 switch (event.window.event) {
@@ -100,7 +47,6 @@ bool poll() {
                         window_state.height = event.window.data2;
                         break;
                 }
-
                 break;
             default:
                 break;
@@ -122,8 +68,8 @@ void render(int zoom, double latitude, double longitude) {
 
     // Render the slippy map parts
     glEnable(GL_TEXTURE_2D);
-        glRotated(_angle2, 1.0, 0.0, 0.0);
-        glRotated(_angle1, 0.0, 0.0, -1.0);
+        glRotated(viewport_state._angle2, 1.0, 0.0, 0.0);
+        glRotated(viewport_state._angle1, 0.0, 0.0, -1.0);
 
         int top = -6;
         int left = -6;
@@ -136,9 +82,6 @@ void render(int zoom, double latitude, double longitude) {
 
         double lat_diff = (SIZE/2) + ((latitude - tile_latitude) * SIZE / TILE_SIZE_LAT_16);
         double lon_diff = (SIZE/2) + ((tile_longitude - longitude) * SIZE / TILE_SIZE_LON_16);
-        //std::cout.precision(10);
-        //std::cout << "Lat: " << latitude << " vs " << tile_latitude << " -> offset " << lat_diff << "px" << std::endl;
-        //std::cout << "Lon: " << longitude << " vs " << tile_longitude << " -> offset " << lon_diff << "px" << std::endl;
 
         glPushMatrix();
             glTranslated(lon_diff, lat_diff, 0);
