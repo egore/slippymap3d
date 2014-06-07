@@ -91,8 +91,8 @@ void render(int zoom, double latitude, double longitude) {
     glOrtho(-(window_state.width / 2), (window_state.width / 2), (window_state.height / 2), -(window_state.height / 2), -1000, 1000);
 
     // Rotate and and tilt the world geometry
-    glRotated(viewport_state._angle2, 1.0, 0.0, 0.0);
-    glRotated(viewport_state._angle1, 0.0, 0.0, -1.0);
+    glRotated(viewport_state.angle_tilt, 1.0, 0.0, 0.0);
+    glRotated(viewport_state.angle_rotate, 0.0, 0.0, -1.0);
 
     // Render the slippy map parts
     glEnable(GL_TEXTURE_2D);

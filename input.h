@@ -35,8 +35,8 @@
 #define X_16 (TILE_SIZE_LON_16/TILE_SIZE)
 
 struct s_viewport_state {
-    double _angle1 = 0.0;
-    double _angle2 = 0.0;
+    double angle_rotate = 0.0;
+    double angle_tilt = 0.0;
 };
 
 extern struct s_viewport_state viewport_state;
