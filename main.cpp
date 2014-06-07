@@ -153,7 +153,7 @@ void render(int zoom, double latitude, double longitude) {
     glColor3d(1.0, 1.0, 1.0);
 }
 
-int main(int argc, char **argv) {
+int main() {
 
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
