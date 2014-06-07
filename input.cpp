@@ -88,4 +88,6 @@ void handle_mouse_button_up(SDL_MouseButtonEvent &button) {
 
 void handle_mouse_wheel(SDL_MouseWheelEvent &wheel) {
     player_state.zoom += wheel.y;
+    player_state.zoom = std::max(player_state.zoom, 1);
+    player_state.zoom = std::min(player_state.zoom, 18);
 }
