@@ -25,6 +25,8 @@
 #ifndef _SM3D_GLOBAL_H_
 #define _SM3D_GLOBAL_H_
 
+#define TILE_DIR "./"
+
 /**
  * @brief the size of a tile in pixels
  */

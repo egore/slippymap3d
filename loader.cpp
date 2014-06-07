@@ -28,6 +28,7 @@
 #include <curl/curl.h>
 
 #include "loader.h"
+#include "global.h"
 
 Loader* Loader::_instance = nullptr;
 
@@ -46,12 +47,12 @@ void Loader::download_image(Tile* tile) {
     }
 
     std::stringstream dirname;
-    dirname << "../" << tile->zoom << "/" << tile->x;
+    dirname << TILE_DIR << tile->zoom << "/" << tile->x;
     std::string dir = dirname.str();
     boost::filesystem::create_directories(dir);
     std::string filename = tile->get_filename();
     std::string url = "http://localhost/osm_tiles/" + filename;
-    std::string file = "../" + filename;
+    std::string file = TILE_DIR + filename;
     FILE* fp = fopen(file.c_str(), "wb");
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
@@ -67,7 +68,7 @@ void Loader::download_image(Tile* tile) {
 }
 
 void Loader::load_image(Tile& tile) {
-    std::string filename = "../" + tile.get_filename();
+    std::string filename = TILE_DIR + tile.get_filename();
     if (!boost::filesystem::exists(filename)) {
         ioService.post(boost::bind(&Loader::download_image, this, &tile));
         return;
@@ -82,7 +83,7 @@ void Loader::load_image(Tile& tile) {
 }
 
 void Loader::open_image(Tile &tile) {
-    std::string filename = "../" + tile.get_filename();
+    std::string filename = TILE_DIR + tile.get_filename();
     SDL_Surface *texture = IMG_Load(filename.c_str());
 
     char tmp[4096];
