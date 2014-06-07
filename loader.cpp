@@ -26,9 +26,15 @@
 #include <boost/filesystem.hpp>
 #include <SDL2/SDL_image.h>
 #include <curl/curl.h>
+#include <boost/thread.hpp>
+#include <boost/asio/io_service.hpp>
 
 #include "loader.h"
 #include "global.h"
+
+boost::thread_group pool;
+boost::asio::io_service ioService;
+boost::asio::io_service::work * work;
 
 Loader* Loader::_instance = nullptr;
 
@@ -36,6 +42,19 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t written;
     written = fwrite(ptr, size, nmemb, stream);
     return written;
+}
+
+Loader::Loader() {
+    work = new boost::asio::io_service::work(ioService);
+    for (int i = 0; i < 5; i++) {
+        pool.create_thread(boost::bind(&boost::asio::io_service::run, &ioService));
+    }
+}
+
+Loader::~Loader() {
+    ioService.stop();
+    pool.join_all();
+    delete work;
 }
 
 void Loader::download_image(Tile* tile) {

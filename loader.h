@@ -26,8 +26,6 @@
 #define _SM3D_LOADER_H_
 
 #include <iostream>
-#include <boost/thread.hpp>
-#include <boost/asio/io_service.hpp>
 
 #include "tile.h"
 
@@ -45,22 +43,9 @@ public:
     void open_image(Tile& tile);
 private:
     static Loader* _instance;
-    Loader() {
-        work = new boost::asio::io_service::work(ioService);
-        for (int i = 0; i < 5; i++) {
-            pool.create_thread(boost::bind(&boost::asio::io_service::run, &ioService));
-        }
-    }
+    Loader();
     Loader(const Loader&) {}
-    ~Loader() {
-        ioService.stop();
-        pool.join_all();
-        delete work;
-    }
-
-    boost::thread_group pool;
-    boost::asio::io_service ioService;
-    boost::asio::io_service::work * work;
+    ~Loader();
 
     void download_image(Tile* tile);
 
