@@ -25,15 +25,27 @@
 #ifndef _SM3D_GLOBAL_H_
 #define _SM3D_GLOBAL_H_
 
+/**
+ * @brief the size of a tile in pixels
+ */
 #define TILE_SIZE (150.0)
 #define TILE_SIZE_LAT_16 (0.00350434/2) /* TODO hardcoding this does not work due to merkator projection */
+/**
+ * Determines the longitude size of a tile at zoom 16
+ */
 #define TILE_SIZE_LON_16 (0.0054931640625/2)
 
 /**
- * @brief holds the state of the windows width and height
+ * @brief holds the state of the window's width and height
  */
 struct s_window_state {
+    /**
+     * @brief width of the window
+     */
     int width;
+    /**
+     * @brief height of the window
+     */
     int height;
 };
 
