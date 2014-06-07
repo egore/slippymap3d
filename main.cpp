@@ -102,8 +102,8 @@ void render(int zoom, double latitude, double longitude) {
         double tile_longitude = tilex2long(center_tile->x, zoom);
 
         // Offset of the current tile from the center of the screen
-        double lat_diff = (TILE_SIZE/2) + ((latitude - tile_latitude) * TILE_SIZE / TILE_SIZE_LAT_16);
-        double lon_diff = (TILE_SIZE/2) + ((tile_longitude - longitude) * TILE_SIZE / TILE_SIZE_LON_16);
+        double lat_diff = (TILE_SIZE/2) + ((latitude - tile_latitude) * TILE_SIZE / latsize(player_state.latitude, zoom));
+        double lon_diff = (TILE_SIZE/2) + ((tile_longitude - longitude) * TILE_SIZE / lonsize(zoom));
 
         glPushMatrix();
             glTranslated(lon_diff, lat_diff, 0);

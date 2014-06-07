@@ -56,6 +56,13 @@ extern double tilex2long(int x, int z);
 
 extern double tiley2lat(int y, int z);
 
+/**
+ * Determines the longitude size of a tile at given zoom
+ */
+extern double lonsize(int z);
+
+extern double latsize(double lat, int z);
+
 class TileFactory {
 private:
     std::map<std::string, Tile*> tiles;

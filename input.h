@@ -31,9 +31,6 @@
 
 #define MAX_TILT (65)
 
-#define Y_16 (TILE_SIZE_LAT_16/TILE_SIZE)
-#define X_16 (TILE_SIZE_LON_16/TILE_SIZE)
-
 struct s_viewport_state {
     double angle_rotate = 0.0;
     double angle_tilt = 0.0;

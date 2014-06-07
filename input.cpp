@@ -23,9 +23,11 @@
  */
 
 #include <algorithm>
+#include <cmath>
 
 #include "input.h"
 #include "global.h"
+#include "tile.h"
 
 struct s_input_state {
     bool left_mouse_down = false;
@@ -54,8 +56,11 @@ void handle_mouse_motion(SDL_MouseMotionEvent &motion) {
     if (input_state.middle_mouse_down) {
         long double _cos = std::cos(viewport_state.angle_rotate * M_PI / 180);
         long double _sin = std::sin(viewport_state.angle_rotate * M_PI / 180);
-        player_state.latitude += Y_16 * (motion.yrel * _cos + motion.xrel * _sin) / std::cos(viewport_state.angle_tilt * M_PI / 180);
-        player_state.longitude -= X_16 * (motion.xrel * _cos - motion.yrel * _sin);
+        player_state.latitude += (latsize(player_state.latitude, player_state.zoom)/TILE_SIZE) * (motion.yrel * _cos + motion.xrel * _sin) / std::cos(viewport_state.angle_tilt * M_PI / 180);
+        // Cap between a latitude of -66° ad 80° due to the limitations of mercator
+        player_state.latitude = std::min(player_state.latitude, 80.0);
+        player_state.latitude = std::max(player_state.latitude, -66.0);
+        player_state.longitude -= (lonsize(player_state.zoom)/TILE_SIZE) * (motion.xrel * _cos - motion.yrel * _sin);
     }
 }
 

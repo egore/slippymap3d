@@ -83,6 +83,16 @@ double tiley2lat(int y, int z) {
     return 180.0 / M_PI * atan(0.5 * (exp(n) - exp(-n)));
 }
 
+double lonsize(int z) {
+    return 1 / pow(2.0, z) * 180.0;
+}
+
+double latsize(double lat, int z) {
+    // TODO this needs optimization but seems to work for now
+    int tile = lat2tiley(lat, z);
+    return (tiley2lat(tile, z) - tiley2lat(tile + 1, z)) / 2;
+}
+
 Tile* TileFactory::get_tile(int zoom, double latitude, double longitude) {
     int x = long2tilex(longitude, zoom);
     int y = lat2tiley(latitude, zoom);
