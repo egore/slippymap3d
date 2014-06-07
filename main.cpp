@@ -108,10 +108,10 @@ void render(int zoom, double latitude, double longitude) {
         glPushMatrix();
             glTranslated(lon_diff, lat_diff, 0);
 
-            static const int top = -6;
-            static const int left = -6;
-            static const int bottom = 6;
-            static const int right = 6;
+            static const int top = -4;
+            static const int left = -4;
+            static const int bottom = 5;
+            static const int right = 5;
 
             // Start 'left' and 'top' tiles from the center tile and render down to 'bottom' and
             // 'right' tiles from the center tile
