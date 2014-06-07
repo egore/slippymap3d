@@ -54,7 +54,7 @@ void handle_mouse_motion(SDL_MouseMotionEvent &motion) {
     if (input_state.middle_mouse_down) {
         long double _cos = std::cos(viewport_state._angle1 * M_PI / 180);
         long double _sin = std::sin(viewport_state._angle1 * M_PI / 180);
-        player_state.latitude += Y_16 * (motion.yrel * _cos + motion.xrel * _sin);
+        player_state.latitude += Y_16 * (motion.yrel * _cos + motion.xrel * _sin) / std::cos(viewport_state._angle2 * M_PI / 180);
         player_state.longitude -= X_16 * (motion.xrel * _cos - motion.yrel * _sin);
     }
 }
