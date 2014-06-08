@@ -47,3 +47,8 @@ Navigation
 * Left mouse button: rotate the map
 * Right mouse button: tile the map
 * Middle mouse button: move the map
+
+Screenshots
+-----------
+
+To see a few screenshots take a look at https://plus.google.com/+ChristophBrill/posts/CLife8pvGoB
